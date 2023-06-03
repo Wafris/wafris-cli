@@ -22,15 +22,15 @@ The WAFRIS CLI is a bash script that lets you interact with your Web Application
 
 Before you begin, please ensure that you have the necessary permissions to execute the script. If not, you can provide execute permissions to the script by running the following command in your terminal:
 
-\`\`\`bash
+```bash
 chmod +x wafris-cli.sh
-\`\`\`
+```
 
 Once you have ensured that the script is executable, you can run it using the following syntax:
 
-\`\`\`bash
+```bash
 ./wafris-cli.sh [OPTIONS]
-\`\`\`
+```
 
 ## Understanding the Option Flags
 
@@ -40,9 +40,17 @@ This flag allows you to add a specific IP address to the blocklist. This means t
 
 Usage: 
 
-\`\`\`bash
+```bash
 ./wafris-cli.sh -a <IP_ADDRESS>
-\`\`\`
+```
+
+OR
+
+
+```bash
+./wafris-cli -a <IP_ADDRESS>
+```
+
 
 Where `<IP_ADDRESS>` is the IP address that you want to block. Please replace `<IP_ADDRESS>` with the actual IP address.
 
@@ -52,9 +60,9 @@ This flag lets you remove an IP address from the blocklist. The removed IP will 
 
 Usage: 
 
-\`\`\`bash
+```bash
 ./wafris-cli.sh -r <IP_ADDRESS>
-\`\`\`
+```
 
 Replace `<IP_ADDRESS>` with the IP address that you want to unblock.
 
@@ -64,9 +72,9 @@ This flag allows you to add a specific IP address to the allowlist. This IP addr
 
 Usage: 
 
-\`\`\`bash
+```bash
 ./wafris-cli.sh -A <IP_ADDRESS>
-\`\`\`
+```
 
 Again, replace `<IP_ADDRESS>` with the IP address you want to allow.
 
@@ -76,9 +84,9 @@ This flag lets you remove an IP address from the allowlist. The removed IP will 
 
 Usage: 
 
-\`\`\`bash
+```bash
 ./wafris-cli.sh -R <IP_ADDRESS>
-\`\`\`
+```
 
 Replace `<IP_ADDRESS>` with the IP address that you want to remove from the allowlist.
 
@@ -88,9 +96,9 @@ This flag provides a list of IP addresses that have made the most requests to yo
 
 Usage: 
 
-\`\`\`bash
+```bash
 ./wafris-cli.sh -g
-\`\`\`
+```
 
 This command does not require any additional parameters.
 
@@ -100,9 +108,9 @@ This flag gives you a list of IP addresses that have been blocked the most. It h
 
 Usage: 
 
-\`\`\`bash
+```bash
 ./wafris-cli.sh -b
-\`\`\`
+```
 
 This command does not require any additional parameters.
 
@@ -112,9 +120,9 @@ This flag displays the help menu that provides a brief overview of each option f
 
 Usage: 
 
-\`\`\`bash
+```bash
 ./wafris-cli.sh -h
-\`\`\`
+```
 
 No additional parameters are needed for this command.
 

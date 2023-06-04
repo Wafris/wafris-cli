@@ -15,7 +15,7 @@ echo -e "\n${NC}→ Testing Wafris Blocking IP addresses"
   reset_redis
 
   ip_to_block="9.9.9.9"
-  cli_result=$(./wafris-cli.sh -a $ip_to_block)
+  cli_result=$(./wafris -a $ip_to_block)
 
   if [ "$(get_http_response_code $(test_url) $ip_to_block)" -eq 403 ]; then
     echo -e "${CHECK_MARK} ${NC} $test_name"

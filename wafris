@@ -10,7 +10,7 @@ source lib/utils.sh
 
 # Function to display help
 display_help() {
-  echo "Usage: ./wafris-cli.sh [OPTIONS]"
+  echo "Usage: ./wafris [OPTIONS]"
   echo
   echo "Options:"
   echo "-a  Add IP address to blocklist"
@@ -22,7 +22,7 @@ display_help() {
   echo "-h  Display this help menu"
   echo
   echo "Example:"
-  echo "    ./wafris-cli.sh -a 1.1.1.1"
+  echo "    ./wafris -a 1.1.1.1"
 }
 
 # Exeute redis-cli commands

@@ -115,7 +115,7 @@ should_not_exist_in_sorted_set() {
   local value=$3
 
   # Execute the action
-  local cli_result=$(./wafris-cli.sh $action $value)
+  local cli_result=$(./wafris $action $value)
 
   # Check if the IP address does not exist in the list
   local result=$(execute_redis_command "ZRANK $sorted_set_name $value")

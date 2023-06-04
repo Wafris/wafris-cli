@@ -2,69 +2,58 @@
 Use the Wafris CLI to set rules and monitor your Wafris instance.
 
 ## What's Wafris
-Wafris is an open source web application firewall that runs within your existing web framework powered by Redis.
+Wafris is an open-source web application firewall that runs within your existing web framework powered by Redis.
 
 The Wafris CLI (this repository) interacts with a Redis installation to set rules for your Wafris instance.
 
 ## How do the pieces fit together?
 
-- **Redis**: the Client sends request data (IP address, Proxy info, User agent, Host, Path, etc.) to the Redis instance where it's evaluated against rules that you have set.  
+- **Redis**: the Client sends request data (IP address, Proxy info, User agent, Host, Path, etc.) to the Redis instance, where it's evaluated against rules that you have set.  
 
-- **Wafris Client**: an open source framework specific library that is installed in your application.
+- **Wafris Client**: an open-source framework-specific library installed in your application.
 
-- **Wafris CLI**: an open source command line tool for setting new Wafris rules (ex: Blocking an IP address) 
+- **Wafris CLI**: an open-source command line tool for setting new Wafris rules (ex: Blocking an IP address) 
 
-- **Wafris Hub**: a free hosted web interface for both the reporting of the traffic coming into your application as well as rule setting, and access management. 
+- **Wafris Hub**: a free hosted web interface for reporting the traffic coming into your application and rule setting and access management. 
 
-# Using WAFRIS CLI Bash Script: An In-Depth Guide
+## Using Wafris CLI
 
-The WAFRIS CLI is a bash script that lets you interact with your Web Application Firewall (WAF). It offers several features that allow you to manage your IP blocklist and allowlist. This article provides a comprehensive guide on each option flag provided by the `wafris-cli.sh` script.
-
-Before you begin, please ensure that you have the necessary permissions to execute the script. If not, you can provide execute permissions to the script by running the following command in your terminal:
+Wafris CLI is a utility that lets you interact with your Web Application Firewall (WAF). It offers several features that allow you to manage your IP blocklist and allowlist rules.
 
 ```bash
-chmod +x wafris-cli.sh
+./wafris [OPTIONS]
 ```
 
-Once you have ensured that the script is executable, you can run it using the following syntax:
+## Connecting to Redis
 
-```bash
-./wafris-cli.sh [OPTIONS]
-```
+
 
 ## Understanding the Option Flags
 
-### `-a`: Add IP address to blocklist
+### `-a`: Add IP address to the blocklist
 
-This flag allows you to add a specific IP address to the blocklist. This means that the IP address will be blocked from making any requests to your server.
-
-Usage: 
-
-```bash
-./wafris-cli.sh -a <IP_ADDRESS>
-```
-
-OR
-
-
-```bash
-./wafris-cli -a <IP_ADDRESS>
-```
-
-
-Where `<IP_ADDRESS>` is the IP address that you want to block. Please replace `<IP_ADDRESS>` with the actual IP address.
-
-### `-r`: Remove IP address from blocklist
-
-This flag lets you remove an IP address from the blocklist. The removed IP will no longer be blocked from accessing your server.
+This flag allows you to add a specific IP address to the block list, preventing further requests from that address from accessing your application.
 
 Usage: 
 
 ```bash
-./wafris-cli.sh -r <IP_ADDRESS>
+./wafris -a <IP_ADDRESS>
 ```
 
-Replace `<IP_ADDRESS>` with the IP address that you want to unblock.
+
+Where `<IP_ADDRESS>` is the IP address you want to block. Please replace `<IP_ADDRESS>` with the actual IP address.
+
+### `-r`: Remove the IP address from the blocklist
+
+This flag lets you remove an IP address from the blocklist, allowing that IP to  The removed IP will no longer be blocked from accessing your server.
+
+Usage: 
+
+```bash
+./wafris -r <IP_ADDRESS>
+```
+
+Replace `<IP_ADDRESS>` with the IP address you want to unblock.
 
 ### `-A`: Add IP address to allowlist
 
@@ -73,7 +62,7 @@ This flag allows you to add a specific IP address to the allowlist. This IP addr
 Usage: 
 
 ```bash
-./wafris-cli.sh -A <IP_ADDRESS>
+./wafris -A <IP_ADDRESS>
 ```
 
 Again, replace `<IP_ADDRESS>` with the IP address you want to allow.
@@ -85,46 +74,63 @@ This flag lets you remove an IP address from the allowlist. The removed IP will 
 Usage: 
 
 ```bash
-./wafris-cli.sh -R <IP_ADDRESS>
+./wafris -R <IP_ADDRESS>
 ```
 
-Replace `<IP_ADDRESS>` with the IP address that you want to remove from the allowlist.
+Replace `<IP_ADDRESS>` with the IP address you want to remove from the allowlist.
 
 ### `-g`: Get top requesting IPs
 
-This flag provides a list of IP addresses that have made the most requests to your server. This can help identify potential threats or recognize IPs that are accessing your server excessively.
+This flag lists IP addresses that have made the most requests to your server. This can help identify potential threats or recognize IPs accessing your server excessively.
 
 Usage: 
 
 ```bash
-./wafris-cli.sh -g
+./wafris -g
 ```
 
 This command does not require any additional parameters.
 
 ### `-b`: Get top blocked IPs
 
-This flag gives you a list of IP addresses that have been blocked the most. It helps you to identify potentially malicious IPs that are repeatedly trying to breach your security.
+This flag gives you a list of IP addresses that have been blocked the most. It helps you identify potentially malicious IPs repeatedly trying to breach your security.
 
 Usage: 
 
 ```bash
-./wafris-cli.sh -b
+./wafris -b
 ```
 
 This command does not require any additional parameters.
 
 ### `-h`: Display the help menu
 
-This flag displays the help menu that provides a brief overview of each option flag. It's a quick way to remember what each flag does.
+This flag displays the help menu, providing a brief overview of each option flag. It's a quick way to remember what each flag does.
 
 Usage: 
 
 ```bash
-./wafris-cli.sh -h
+./wafris -h
 ```
 
 No additional parameters are needed for this command.
 
 By understanding and utilizing these options, you can have
 
+
+## FAQ & Troubleshooting
+
+
+### What permissions does this need?
+
+Before you begin, please ensure that you have the necessary permissions to execute the script. If not, you can set execute permissions to the script by running the following command in your terminal:
+
+```bash
+chmod +x wafris
+```
+
+### Why can't I connect to Redis?
+
+1. You should make sure Redis is running, and you can connect to it locally
+2. Make sure that `redis-cli` is installed and in your path
+3. Double-check that you've correctly set Redis connection information in the `config.env` file - on some providers (Heroku), they periodically change the host and port that Redis is on. You may need to update your configuration.

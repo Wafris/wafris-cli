@@ -18,19 +18,24 @@ The Wafris CLI (this repository) interacts with a Redis installation to set rule
 
 # Using WAFRIS CLI Bash Script: An In-Depth Guide
 
-The WAFRIS CLI is a bash script that lets you interact with your Web Application Firewall (WAF). It offers several features that allow you to manage your IP blocklist and allowlist. This article provides a comprehensive guide on each option flag provided by the `wafris-cli.sh` script.
+The WAFRIS CLI is a bash script that lets you interact with your Web Application Firewall (WAF). It offers several features that allow you to manage your IP blocklist and allowlist. This article provides a comprehensive guide on each option flag provided by the `wafris` script.
 
 Before you begin, please ensure that you have the necessary permissions to execute the script. If not, you can provide execute permissions to the script by running the following command in your terminal:
 
 ```bash
-chmod +x wafris-cli.sh
+chmod +x wafris
 ```
 
 Once you have ensured that the script is executable, you can run it using the following syntax:
 
 ```bash
-./wafris-cli.sh [OPTIONS]
+./wafris [OPTIONS]
 ```
+
+```bash
+./wafris [OPTIONS]
+```
+
 
 ## Understanding the Option Flags
 
@@ -41,14 +46,14 @@ This flag allows you to add a specific IP address to the blocklist. This means t
 Usage: 
 
 ```bash
-./wafris-cli.sh -a <IP_ADDRESS>
+./wafris -a <IP_ADDRESS>
 ```
 
 OR
 
 
 ```bash
-./wafris-cli -a <IP_ADDRESS>
+./wafris -a <IP_ADDRESS>
 ```
 
 
@@ -61,7 +66,7 @@ This flag lets you remove an IP address from the blocklist. The removed IP will 
 Usage: 
 
 ```bash
-./wafris-cli.sh -r <IP_ADDRESS>
+./wafris -r <IP_ADDRESS>
 ```
 
 Replace `<IP_ADDRESS>` with the IP address that you want to unblock.
@@ -73,7 +78,7 @@ This flag allows you to add a specific IP address to the allowlist. This IP addr
 Usage: 
 
 ```bash
-./wafris-cli.sh -A <IP_ADDRESS>
+./wafris -A <IP_ADDRESS>
 ```
 
 Again, replace `<IP_ADDRESS>` with the IP address you want to allow.
@@ -85,7 +90,7 @@ This flag lets you remove an IP address from the allowlist. The removed IP will 
 Usage: 
 
 ```bash
-./wafris-cli.sh -R <IP_ADDRESS>
+./wafris -R <IP_ADDRESS>
 ```
 
 Replace `<IP_ADDRESS>` with the IP address that you want to remove from the allowlist.
@@ -97,7 +102,7 @@ This flag provides a list of IP addresses that have made the most requests to yo
 Usage: 
 
 ```bash
-./wafris-cli.sh -g
+./wafris -g
 ```
 
 This command does not require any additional parameters.
@@ -109,7 +114,7 @@ This flag gives you a list of IP addresses that have been blocked the most. It h
 Usage: 
 
 ```bash
-./wafris-cli.sh -b
+./wafris -b
 ```
 
 This command does not require any additional parameters.
@@ -121,7 +126,7 @@ This flag displays the help menu that provides a brief overview of each option f
 Usage: 
 
 ```bash
-./wafris-cli.sh -h
+./wafris -h
 ```
 
 No additional parameters are needed for this command.

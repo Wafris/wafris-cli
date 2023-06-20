@@ -7,8 +7,8 @@ source lib/utils.sh
 
 # Check if TEST_MODE is set to true
 if [[ "$TEST_MODE" == "false" ]]; then
-  echo "TEST_MODE is set to false. Set to 'true' in config.env to run tests"
-  exit 1
+	echo "TEST_MODE is set to false. Set to 'true' in config.env to run tests"
+	exit 1
 fi
 
 # IP variations
@@ -20,8 +20,8 @@ non_ip="abc"
 SCRIPT_DIR="./cli_tests"
 
 for script in "$SCRIPT_DIR"/*.sh; do
-  if [ -f "$script" ]; then
-    source "$script"
-  fi
+	if [ -f "$script" ]; then
+		source "$script"
+	fi
 done
-
+reset_redis

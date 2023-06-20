@@ -144,18 +144,18 @@ function can_connect() {
 
 ## Takes a URL and an IP address and returns the HTTP response code
 function get_http_response_code() {
-  local url=$1
-  local header=$2
+	local url=$1
+	local ip=$2
 
-  # No IP address provided
-  if [[ -z $header ]]; then
-    response_code=$(curl -s -o /dev/null -I -w "%{http_code}" $url)
+	# No IP address provided
+	if [[ -z $ip ]]; then
+		response_code=$(curl -s -o /dev/null -I -w "%{http_code}" $url)
 
-  # Supplied IP address
-  else
-    response_code=$(curl -s -o /dev/null -I -H "X-Forwarded-For: $ip" -w "%{http_code}" $url)
-  fi
-  echo $response_code
+	# Supplied IP address
+	else
+		response_code=$(curl -s -o /dev/null -I -H "X-Forwarded-For: $ip" -w "%{http_code}" $url)
+	fi
+	echo $response_code
 }
 
 function test_url() {

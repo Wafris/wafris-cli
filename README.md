@@ -1,8 +1,23 @@
-# wafris-cli
-Use the Wafris CLI to set rules and monitor your Wafris instance.
+# Wafris CLI
 
-## What's Wafris
-Wafris is an open-source web application firewall that runs within your existing web framework powered by Redis.
+## What's Wafris?
+Wafris is an open-source Web Application Firewall (WAF) that runs within your existing web framework powered by Redis.
+
+Need a better explanation: read 30s overview at: [wafris.org/start](https://wafris.org/start)
+
+## What's the Wafris CLI (this repository)
+
+Wafris CLI lets you set rules and monitor your Wafris instance.
+
+Using the Wafris CLI is optional as for most use cases it's significantly easier to analyze your traffic and set in Wafris Hub at [https://wafris.org/hub](https://wafris.org/hub). 
+
+The CLI tool is primarily useful as:
+
+- An "API" for performing automatic rule setting. Ex: Adding thousands of IP address from a text file to be blocked.
+
+- A tool for managing your Wafris instances in cases where the Redis database backing it can't be reached. 
+
+- A guarantee of our commitment to Open Source and unencumbered security applications.
 
 The Wafris CLI (this repository) interacts with a Redis installation to set rules for your Wafris instance.
 
@@ -24,11 +39,50 @@ Wafris CLI is a utility that lets you interact with your Web Application Firewal
 ./wafris [OPTIONS]
 ```
 
-## Connecting to Redis
+## Getting Started
 
+### Prerequisites
 
+- Wafris client added to your web application
+- A Redis server
+- Locally installed Redis CLI tools
 
-## Understanding the Option Flags
+### 1. Download the CLI 
+
+Download a zip of the Wafris CLI tool:
+
+[Download latest]()
+
+### 2. Connecting to Redis
+
+In the unzipped 'wafris-cli' folder modify the config.env file found within to set the credentials of your Redis instance. 
+
+Note: please don't check .env files (our included) into source control.
+
+### 3. Check your config
+
+At the command line, navigate to the `wafris-cli` directory and run
+
+```bash
+./wafris -c
+```
+
+If everything passes you should see someting like the following.
+
+```text
+→ Checking Redis CLI
+ ✔️ Redis CLI is installed.
+ ✔️ Redis CLI version is 7.0.8, which meets the minimum requirement of 6 or higher.
+
+→ Checking Redis Server
+ ✔️ Successfully connected to Redis server at localhost:6379.
+ ✔️ Redis server version is 7.0.8, which meets the minimum requirement of 6 or higher.
+
+🎉 All checks passed. You're good to go!
+
+```
+
+## Wafris CLI command options
 
 ### `-a`: Add IP address to the blocklist
 
@@ -39,7 +93,6 @@ Usage:
 ```bash
 ./wafris -a <IP_ADDRESS>
 ```
-
 
 Where `<IP_ADDRESS>` is the IP address you want to block. Please replace `<IP_ADDRESS>` with the actual IP address.
 
@@ -55,53 +108,16 @@ Usage:
 
 Replace `<IP_ADDRESS>` with the IP address you want to unblock.
 
-### `-A`: Add IP address to allowlist
+### `-c`: Check configuration
 
-This flag allows you to add a specific IP address to the allowlist. This IP address will always be permitted to make requests to your server, bypassing the WAF's security filters.
-
-Usage: 
-
-```bash
-./wafris -A <IP_ADDRESS>
-```
-
-Again, replace `<IP_ADDRESS>` with the IP address you want to allow.
-
-### `-R`: Remove IP address from allowlist
-
-This flag lets you remove an IP address from the allowlist. The removed IP will no longer bypass the WAF's security filters.
+This flag runs the CLI requirements and configuration check.
 
 Usage: 
 
 ```bash
-./wafris -R <IP_ADDRESS>
+./wafris -c 
 ```
 
-Replace `<IP_ADDRESS>` with the IP address you want to remove from the allowlist.
-
-### `-g`: Get top requesting IPs
-
-This flag lists IP addresses that have made the most requests to your server. This can help identify potential threats or recognize IPs accessing your server excessively.
-
-Usage: 
-
-```bash
-./wafris -g
-```
-
-This command does not require any additional parameters.
-
-### `-b`: Get top blocked IPs
-
-This flag gives you a list of IP addresses that have been blocked the most. It helps you identify potentially malicious IPs repeatedly trying to breach your security.
-
-Usage: 
-
-```bash
-./wafris -b
-```
-
-This command does not require any additional parameters.
 
 ### `-h`: Display the help menu
 
@@ -120,8 +136,7 @@ By understanding and utilizing these options, you can have
 
 ## FAQ & Troubleshooting
 
-
-### What permissions does this need?
+### Q: What permissions does this need?
 
 Before you begin, please ensure that you have the necessary permissions to execute the script. If not, you can set execute permissions to the script by running the following command in your terminal:
 
@@ -129,8 +144,16 @@ Before you begin, please ensure that you have the necessary permissions to execu
 chmod +x wafris
 ```
 
-### Why can't I connect to Redis?
+### Q: Why can't I connect to Redis?
 
-1. You should make sure Redis is running, and you can connect to it locally
+1. You should make sure Redis is running, and you can connect to it via your `redis-cli` tools.
 2. Make sure that `redis-cli` is installed and in your path
 3. Double-check that you've correctly set Redis connection information in the `config.env` file - on some providers (Heroku), they periodically change the host and port that Redis is on. You may need to update your configuration.
+
+### Q: How can I get help?
+
+Email [support@wafris.org](mailto:support@wafris.org) or book a time at https://app.harmonizely.com/expedited/wafris
+
+
+
+

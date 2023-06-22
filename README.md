@@ -3,13 +3,13 @@
 ## What's Wafris?
 Wafris is an open-source Web Application Firewall (WAF) that runs within your existing web framework powered by Redis.
 
-Need a better explanation: read 30s overview at: [wafris.org/start](https://wafris.org/start)
+Need a better explanation? Read the overview at: [wafris.org](https://wafris.org)
 
 ## What's the Wafris CLI (this repository)
 
 Wafris CLI lets you set rules and monitor your Wafris instance.
 
-Using the Wafris CLI is optional as for most use cases it's significantly easier to analyze your traffic and set in Wafris Hub at [https://wafris.org/hub](https://wafris.org/hub). 
+Using the Wafris CLI is optional as for most use cases it's significantly easier to analyze your traffic and set in Wafris Hub at [https://wafris.org/users/sign_up](https://wafris.org/users/sign_up). 
 
 The CLI tool is primarily useful as:
 

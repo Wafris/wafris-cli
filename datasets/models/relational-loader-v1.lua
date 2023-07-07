@@ -90,7 +90,7 @@ local function increment_partial_hourly_request_counters(unix_time_milliseconds)
 end
 
 -- Configuration
-local max_requests = 100000
+local max_requests = 1000000
 local max_requests_per_ip = 10000
 
 local client_ip = ARGV[1]
@@ -118,20 +118,38 @@ increment_timebucket_for("ua:", current_timebucket, user_agent)
 increment_timebucket_for("path:", current_timebucket, request_path)
 increment_timebucket_for("host:", current_timebucket, host)
 
--- BLOCKING LOGIC
--- TODO: ZRANGEBYSCORE is deprecated in Redis 6.2+. Replace with ZRANGE
-if
-  -- TODO: When we introduce ranges we'll have to do an exact check followed by a range starting with decimal ip to infinity.
-  -- If the first result returned is "END" that means it falls in the range
 
-  -- ZRANGEBYSCORE will always return a lua table, even if empty
-  -- This call is checking if the table is empty
-  next(redis.call("ZRANGEBYSCORE", "w:blocked-ranges", client_ip_to_decimal, client_ip_to_decimal, "LIMIT", 0, 1))
-  ~= nil
-then
-  increment_timebucket_for("blk:", current_timebucket, client_ip)
-  return "Blocked"
--- No Matches
-else
-  return "Allowed"
+-- NEW RELATIONAL STRUCTURE
+
+-- User Agent
+local ua_id = redis.call("HGET", "ua-value-to-id", user_agent)
+
+if ua_id == false then
+  ua_id = redis.call("INCR", "ua-id-counter")
+  redis.call("HSET", "ua-value-to-id", user_agent, ua_id)
+  redis.call("HSET", "ua-id-to-value", ua_id, user_agent)
 end
+
+
+-- Adding Request 
+  -- using timestamp as id but should be * in production  
+  local stream_id = unix_time_milliseconds .. "-0"
+  local request_id = redis.call("XADD", "requestStream", "MAXLEN", "~", max_requests, stream_id, "ip", client_ip, "ua_id", ua_id)
+
+  -- Adding to Lists
+  redis.call("LPUSH", "ipRequestsList:" .. client_ip, request_id)
+  redis.call("LPUSH", "uaRequestsList:" .. ua_id, request_id)
+
+  -- todo: add expire for lists
+
+
+return "done"
+
+
+
+
+
+
+
+
+

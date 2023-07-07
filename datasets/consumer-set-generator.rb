@@ -2,7 +2,7 @@ require 'faker'
 require 'awesome_print'
 
 # Settings
-ENTRY_COUNT = 15000
+ENTRY_COUNT = 1000
 IP_COUNT = 500000
 PATH_COUNT = 100000
 USER_AGENT_COUNT = 250
@@ -36,6 +36,16 @@ def weighted_random(methods)
   end
 end
 
+# Timestamps need to be sequential, so generate them first
+# We generate them _back_ from the current time so the data makes more sense in querying / modeling
+timestamp_array = []
+current_time_ms = Time.now.to_i * 1000
+(0..ENTRY_COUNT).each do |i|
+  current_time_ms -= rand(5..25)
+  timestamp_array << current_time_ms
+end
+
+
 hosts = (0..HOST_COUNT).map { Faker::Internet.domain_name }
 
 (0..ENTRY_COUNT).each do |i|
@@ -45,9 +55,8 @@ hosts = (0..HOST_COUNT).map { Faker::Internet.domain_name }
   # Integer IP
   ip_int = IPAddr.new(ip).to_i
 
-  # Timestamp
-  current_time = Time.now.utc
-  timestamp_ms = Faker::Time.between(from: current_time - DAYS_AGO_COUNT, to: current_time).to_f * 1000
+  # Timestamps - generate these sequentially as otherwise they won't work as stream ids
+  timestamp_ms = timestamp_array.pop
 
   # User Agent
   user_agent = uas.sample

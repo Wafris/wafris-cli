@@ -19,7 +19,26 @@ All models are flawed, but some are useful and in setting this up here's the thr
 
 ## How to Use
 
+From the `/datasets` directory
 
+### 1. Generate a new Dataset 
+
+This generates a new CSV in the dataset directory that is then acted upon by the "model" script.
+
+```ruby consumer-set-generator.rb```
+
+- Modify the ENTRY_COUNT in the Settings section to adjust how many records are created
+- Don't check in generated CSVs as they're huge
+
+### 2. Run the "model" 
+
+This loads the dataset and attempts to simulate both writing requests to Redis and then reading them. 
+
+```bash models/relational-model.sh```
+
+This bash script runs both the loader and query lua scripts that define the model. 
+
+Modify the scripts to add new data structure, storage types or reporting setups and the script spits out the new memory consumption and timings. 
 
 
 ## API Set

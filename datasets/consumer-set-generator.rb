@@ -2,8 +2,8 @@ require 'faker'
 require 'awesome_print'
 
 # Settings
-ENTRY_COUNT = 1000
-IP_COUNT = 500000
+ENTRY_COUNT = 10000
+IP_COUNT = 500
 PATH_COUNT = 100000
 USER_AGENT_COUNT = 250
 METHOD_COUNT = 10
@@ -71,7 +71,7 @@ hosts = (0..HOST_COUNT).map { Faker::Internet.domain_name }
   method = weighted_random(methods)
 
   # Write to file
-  output_file.puts "#{ip},#{ip_int},#{timestamp_ms},#{user_agent},#{path},#{host},#{method}"
+  output_file.puts "\"#{ip}\",\"#{ip_int}\",\"#{timestamp_ms}\",\"#{user_agent}\",\"#{path}\",\"#{host}\",\"#{method}\""
 end
 
 

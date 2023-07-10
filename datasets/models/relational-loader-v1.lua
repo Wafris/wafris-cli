@@ -103,14 +103,14 @@ local host = ARGV[6]
 local method = ARGV[7]
 
 -- Initialize local variables
-local request_id = get_request_id(nil, client_ip, max_requests)
+-- local request_id = get_request_id(nil, client_ip, max_requests)
 local current_timebucket = get_time_bucket_from_timestamp(unix_time_milliseconds, false)
 
 -- CARD DATA COLLECTION
 increment_partial_hourly_request_counters(unix_time_milliseconds)
 
 -- GRAPH DATA COLLECTION
-add_to_graph_timebucket(current_timebucket, request_id)
+-- add_to_graph_timebucket(current_timebucket, request_id)
 
 -- LEADERBOARD DATA COLLECTION
 increment_timebucket_for("ip:", current_timebucket, client_ip)
@@ -120,8 +120,19 @@ increment_timebucket_for("host:", current_timebucket, host)
 
 
 -- NEW RELATIONAL STRUCTURE
+  -- using timestamp as id but should be * in production  
+  local stream_id = unix_time_milliseconds .. "-0"
 
--- User Agent
+-- IP Address Request Property
+local ip_id = redis.call("HGET", "ip-value-to-id", client_ip)
+
+if ip_id == false then
+  ip_id = redis.call("INCR", "ip-id-counter")
+  redis.call("HSET", "ip-value-to-id", client_ip, ip_id)
+  redis.call("HSET", "ip-id-to-value", ip_id, client_ip)
+end
+
+-- User Agent Request Property
 local ua_id = redis.call("HGET", "ua-value-to-id", user_agent)
 
 if ua_id == false then
@@ -130,20 +141,62 @@ if ua_id == false then
   redis.call("HSET", "ua-id-to-value", ua_id, user_agent)
 end
 
+-- Path Request Property
+local path_id = redis.call("HGET", "path-value-to-id", request_path)
+
+if path_id == false then
+  path_id = redis.call("INCR", "path-id-counter")
+  redis.call("HSET", "path-value-to-id", request_path, path_id)
+  redis.call("HSET", "path-id-to-value", path_id, request_path)
+end
+
+-- Host Request Property
+local host_id = redis.call("HGET", "host-value-to-id", host)
+
+if host_id == false then
+  host_id = redis.call("INCR", "host-id-counter")
+  redis.call("HSET", "host-value-to-id", host, host_id)
+  redis.call("HSET", "host-id-to-value", host_id, host)
+end
+
+-- Method Request Property
+local method_id = redis.call("HGET", "method-value-to-id", method)
+
+if method_id == false then
+  method_id = redis.call("INCR", "method-id-counter")
+  redis.call("HSET", "method-value-to-id", method, method_id)
+  redis.call("HSET", "method-id-to-value", method_id, method)
+end
+
+
 
 -- Adding Request 
-  -- using timestamp as id but should be * in production  
-  local stream_id = unix_time_milliseconds .. "-0"
-  local request_id = redis.call("XADD", "requestStream", "MAXLEN", "~", max_requests, stream_id, "ip", client_ip, "ua_id", ua_id)
+  local request_id = redis.call("XADD", "requestsStream", "MAXLEN", "~", max_requests, stream_id, "ip_id", ip_id, "ua_id", ua_id)
+ 
+-- Adding to Property Streams
+  local ip_to_request_stream = "ip-to-request-stream:" .. tostring(ip_id)
+  local ip_request_id = redis.call("XADD", ip_to_request_stream, "MAXLEN", "~", max_requests, "*", "r_id", stream_id)
+  
+  local ua_to_request_stream = "ua-to-request-stream:" .. tostring(ua_id)
+  local ua_request_id = redis.call("XADD", ua_to_request_stream, "MAXLEN", "~", max_requests, "*", "r_id", stream_id)
+  
+  local path_to_request_stream = "path-to-request-stream:" .. tostring(path_id)
+  local path_request_id = redis.call("XADD", path_to_request_stream, "MAXLEN", "~", max_requests, "*", "r_id", stream_id)
+  
+  local host_to_request_stream = "host-to-request-stream:" .. tostring(host_id)
+  local host_request_id = redis.call("XADD", host_to_request_stream, "MAXLEN", "~", max_requests, "*", "r_id", stream_id)
+  
+  local method_to_request_stream = "method-to-request-stream:" .. tostring(method_id)
+  local method_request_id = redis.call("XADD", method_to_request_stream, "MAXLEN", "~", max_requests, "*", "r_id", stream_id)
+  
 
-  -- Adding to Lists
-  redis.call("LPUSH", "ipRequestsList:" .. client_ip, request_id)
-  redis.call("LPUSH", "uaRequestsList:" .. ua_id, request_id)
-
-  -- todo: add expire for lists
 
 
-return "done"
+-- Adding to Property Existence Sets
+  redis.call("SADD", "ip-requests-set", client_ip)
+
+
+return ip_request_id
 
 
 

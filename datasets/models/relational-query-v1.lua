@@ -46,27 +46,11 @@ local current_timestamp = tonumber(redis.call("TIME")[1]) * 1000 -- Get current 
 	local id
 
 	local output_stream_data = ""
+	local count_ua_id = 0
 
-	for _, request in ipairs(requests) do
-			for i, sub_msg in ipairs(request) do
-					if i == 1 then
-							id = sub_msg
-					else
-							-- parse attributes
-							local i = 1
-							while i < #sub_msg do
-									local k = sub_msg[i]
-									local v = sub_msg[i + 1]
 
-									output_stream_data = k .. ": " .. v .. "\n"
 
-									i = i + 2
-							end
-					end
-			end
-	end
-
-	output_data = output_stream_data
+	output_data = tostring(count_ua_id) .. "\n" .. output_stream_data
 
 -- How many IPs have made requests
 -- IPs and how many requests each has made

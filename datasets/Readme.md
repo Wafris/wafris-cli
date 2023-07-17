@@ -34,7 +34,7 @@ This generates a new CSV in the dataset directory that is then acted upon by the
 
 This loads the dataset and attempts to simulate both writing requests to Redis and then reading them. 
 
-```bash models/relational-model.sh```
+```bash models/relational-model.rb```
 
 This bash script runs both the loader and query lua scripts that define the model. 
 
@@ -48,8 +48,6 @@ This set is designed to test performance with a few IP addresses making many req
 It's most similar to an early ExpWAF customer who has licensing software installed in a couple dozen factories around the world with each site basically making request a second.
 
 Requests are very simple (pass in a unique api key and test the response)
-
-1,000,000 requests with:
 
 - Consistent Request timing
 - 24 IPs
@@ -65,8 +63,6 @@ All requests were from custom Java software with a fixed UserAgent
 This is what I think of Monica Lent's Affilimate or Josh's Referral Rock. 
 
 Tons and tons of unique requests combinations from very high traffic sites with very distributed request patterns. 
-
-1,000,000 requests with:
 
 - Spiky and Daytime weighted request timing
 - 500,000 IPs

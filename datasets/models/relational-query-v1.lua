@@ -38,15 +38,24 @@ local current_timestamp = tonumber(redis.call("TIME")[1]) * 1000 -- Get current 
 	output_data = output_data .. " 7to8am: " .. tostring(#result)
 
 
--- Extract unique IPs from the last 24 hours
-	local twenty_four_hours_ago = current_timestamp - (24 * 60 * 60 * 1000) -- Calculate timestamp 24 hours ago
-	local requests = redis.call("XRANGE", "requestStream", twenty_four_hours_ago, "+")
+-- SETUP
+	-- Range (start and end timestamps)
+
+-- Dynamic IP leaderboard
+
+	-- Get array of the involved IPs (from 
+
+	-- XRANGE on the 
 
 
-	local id
+-- All Requests that an IP made
 
-	local output_stream_data = ""
-	local count_ua_id = 0
+
+
+
+-- All User Agents that an IP made requests with
+
+
 
 
 

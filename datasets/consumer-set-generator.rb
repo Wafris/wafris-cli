@@ -2,7 +2,7 @@ require 'faker'
 require 'awesome_print'
 
 # Settings
-ENTRY_COUNT = 10000
+ENTRY_COUNT = 1000000
 IP_COUNT = 500
 PATH_COUNT = 100000
 USER_AGENT_COUNT = 250
@@ -39,12 +39,15 @@ end
 # Timestamps need to be sequential, so generate them first
 # We generate them _back_ from the current time so the data makes more sense in querying / modeling
 timestamp_array = []
-current_time_ms = Time.now.to_i * 1000
+current_time_ms = Time.now.utc.to_i * 1000
+start_time_ms = current_time_ms - (24 * 60 * 60 * 1000)  # Subtracting 24 hours in milliseconds
+interval = (current_time_ms - start_time_ms) / ENTRY_COUNT
+
 (0..ENTRY_COUNT).each do |i|
-  current_time_ms -= rand(5..25)
-  timestamp_array << current_time_ms
+  timestamp_array << start_time_ms + (i * interval)
 end
 
+timestamp_array.reverse!
 
 hosts = (0..HOST_COUNT).map { Faker::Internet.domain_name }
 

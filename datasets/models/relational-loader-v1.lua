@@ -91,7 +91,7 @@ end
 
 -- Configuration
 local max_requests = 1000000
-local max_requests_per_ip = 10000
+local max_requests_per_ip = 100000
 
 local client_ip = ARGV[1]
 local client_ip_to_decimal = ARGV[2]
@@ -171,7 +171,7 @@ end
 
 
 -- Adding Request 
-  local request_id = redis.call("XADD", "requestsStream", "MAXLEN", "~", max_requests, stream_id, "ip_id", ip_id, "ua_id", ua_id)
+  local request_id = redis.call("XADD", "requestsStream", "MAXLEN", "~", max_requests, stream_id, "ip_id", ip_id, "ua_id", ua_id, "path_id", path_id, "host_id", host_id, "method_id", method_id)
  
 -- Adding to Property Streams
   local ip_to_request_stream = "ip-to-request-stream:" .. tostring(ip_id)

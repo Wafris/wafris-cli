@@ -1,4 +1,5 @@
 require 'csv'
+require 'redis'
 
 puts "Relational Model v1"
 puts "Clear Redis"
@@ -30,30 +31,40 @@ ua_arr = []
 
 i  = 0
 # Loop over each line in the CSV file
-CSV.foreach(csv_file) do |line|
+# This is the slowest way to do this but doesn't have CSV encoding issues
+# way better 
+def process_csv_with_redis(csv_file, script_sha)
+  redis = Redis.new
 
-  i = i + 1
+  i = 0
 
-  if (i % 1000 == 0)
-    puts "Processed #{i} lines"
+  CSV.foreach(csv_file) do |line|
+    i += 1
+
+    if i % 25000 == 0
+      puts "Processed #{i} lines"
+    end
+
+    ip, ip_int, timestamp_ms, user_agent, path, hostname, method = line.map(&:strip)
+
+    # Enclose user_agent argument in quotes
+    command = ["EVALSHA", script_sha, "0", ip, ip_int, timestamp_ms, "'#{user_agent}'", path, hostname, method]
+    redis.call(*command)
   end
 
-  ip, ip_int, timestamp_ms, user_agent, path, hostname, method = line.map(&:strip)
-
-  # Enclose user_agent argument in quotes
-  redis_command = "EVALSHA #{script_sha} 0 '#{ip}' '#{ip_int}' '#{timestamp_ms}' \"'#{user_agent}'\" '#{path}' '#{hostname}' '#{method}'"
-
-  output = `redis-cli #{redis_command}`
+  
 end
 
-
+process_csv_with_redis(csv_file, script_sha)
 
 puts ""
 puts "LOAD COMPLETE"
 load_complete_time = (Time.now.to_f * 1000).to_i
 
 # Start Querying
-`redis-cli --eval models/relational-query-v1.lua`
+
+puts "BEGIN QUERY REPORTING"
+puts `ruby models/relational-query.rb`
 
 puts ""
 puts "QUERY COMPLETE"
@@ -107,6 +118,12 @@ puts "Time to query requests: #{query_time} ms"
 
 request_query_time = query_time / line_count.to_f
 puts "MS per Request query: #{request_query_time} ms"
+
+
+
+
+
+
 
 puts ""
 puts "MODEL PERFORMANCE STATS:"

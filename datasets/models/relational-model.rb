@@ -41,7 +41,7 @@ def process_csv_with_redis(csv_file, script_sha)
   CSV.foreach(csv_file) do |line|
     i += 1
 
-    if i % 25000 == 0
+    if i % 1000 == 0
       puts "Processed #{i} lines"
     end
 
@@ -64,7 +64,7 @@ load_complete_time = (Time.now.to_f * 1000).to_i
 # Start Querying
 
 puts "BEGIN QUERY REPORTING"
-puts `ruby models/relational-query.rb`
+#puts `ruby models/relational-query.rb`
 
 puts ""
 puts "QUERY COMPLETE"

@@ -168,35 +168,31 @@ if method_id == false then
   redis.call("HSET", "method-id-to-value", method_id, method)
 end
 
-
-
--- Adding Request 
+-- Adding Request Stream
   local request_id = redis.call("XADD", "requestsStream", "MAXLEN", "~", max_requests, stream_id, "ip_id", ip_id, "ua_id", ua_id, "path_id", path_id, "host_id", host_id, "method_id", method_id)
  
--- Adding to Property Streams
-  local ip_to_request_stream = "ip-to-request-stream:" .. tostring(ip_id)
-  local ip_request_id = redis.call("XADD", ip_to_request_stream, "MAXLEN", "~", max_requests, "*", "r_id", stream_id)
-  
-  local ua_to_request_stream = "ua-to-request-stream:" .. tostring(ua_id)
-  local ua_request_id = redis.call("XADD", ua_to_request_stream, "MAXLEN", "~", max_requests, "*", "r_id", stream_id)
-  
-  local path_to_request_stream = "path-to-request-stream:" .. tostring(path_id)
-  local path_request_id = redis.call("XADD", path_to_request_stream, "MAXLEN", "~", max_requests, "*", "r_id", stream_id)
-  
-  local host_to_request_stream = "host-to-request-stream:" .. tostring(host_id)
-  local host_request_id = redis.call("XADD", host_to_request_stream, "MAXLEN", "~", max_requests, "*", "r_id", stream_id)
-  
-  local method_to_request_stream = "method-to-request-stream:" .. tostring(method_id)
-  local method_request_id = redis.call("XADD", method_to_request_stream, "MAXLEN", "~", max_requests, "*", "r_id", stream_id)
-  
+-- Adding to Property Hashes
+
+local function appendToHash(hashName, property_id, request_id)
+  redis.call("HSETNX", hashName, property_id, request_id)
+
+  local currentValues = redis.call("HGET", hashName, property_id)
+
+  if currentValues ~= request_id then
+      redis.call("HSET", hashName, property_id, currentValues .. "," .. request_id)
+  end
+end
 
 
 
--- Adding to Property Existence Sets
-  redis.call("SADD", "ip-requests-set", client_ip)
+-- Example usage:
+appendToHash("ip-to-request-hash", ip_id, request_id)
+appendToHash("ua-to-request-hash", ua_id, request_id)
+appendToHash("path-to-request-hash", path_id, request_id)
+appendToHash("host-to-request-hash", host_id, request_id)
+appendToHash("method-to-request-hash", method_id, request_id)
 
-
-return ip_request_id
+return "ok"
 
 
 

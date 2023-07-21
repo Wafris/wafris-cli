@@ -1,6 +1,28 @@
-local version = "v0.8:"
-local wafris_prefix = "w:" .. version
 
+
+-- Configuration
+local version = "v0.9-"
+local wafris_prefix = "w-" .. version
+
+local max_requests = 10000
+
+local client_ip = ARGV[1]
+local unix_time_milliseconds = ARGV[2]
+local unix_time = ARGV[2] / 1000
+local user_agent = ARGV[3]
+local path = ARGV[4]
+local parameters = ARGV[5]
+local host = ARGV[6]
+local method = ARGV[7]
+
+ -- not stored, but used for block filtering
+local headers = ARGV[7]
+local post_body = ARGV[8]
+local use_timestamps_as_request_ids = true
+
+-- Sets timebuckets
+-- unix_time_milliseconds: unix time in milliseconds
+-- minutes_flag: boolean, if true, returns timebucket with minutes, if false, returns timebucket without minutes
 local function get_time_bucket_from_timestamp(unix_time_milliseconds, minutes_flag)
   local function calculate_years_number_of_days(yr)
     return (yr % 4 == 0 and (yr % 100 ~= 0 or yr % 400 == 0)) and 366 or 365
@@ -56,149 +78,107 @@ local function get_time_bucket_from_timestamp(unix_time_milliseconds, minutes_fl
   end
 end
 
--- For: Relationship of IP to time of Request (Stream)
-local function get_request_id(timestamp, ip, max_requests)
-  timestamp = timestamp or "*"
-  local request_id = redis.call("XADD", "ip-requests-stream", "MAXLEN", "~", max_requests, timestamp, "ip", ip)
-  return request_id
-end
-
-local function add_to_graph_timebucket(timebucket, request_id)
-  local key = wafris_prefix .. "gr-ct:" .. timebucket
-  redis.call("PFADD", key, request_id)
+-- Leaderboards: Listing of properties and how many requests in a timebucket
+local function increment_leaderboard_for(property_abbreviation, timebucket, property_id)
+  local key = property_abbreviation .. "L" .. timebucket
+  redis.call("ZINCRBY", key, 1, property_id)
   -- Expire the key after 25 hours if it has no expiry
   redis.call("EXPIRE", key, 90000)
 end
 
--- For: Leaderboard of IPs with Request count as score
-local function increment_timebucket_for(type, timebucket, property)
-  local key = wafris_prefix .. type .. "lb:" .. timebucket
-  redis.call("ZINCRBY", key, 1, property)
-  -- Expire the key after 25 hours if it has no expiry
-  redis.call("EXPIRE", key, 90000)
-end
+-- Request Property Loading and Mapping
+local function set_property_value_id_lookups(property_abbreviation, property_value)
 
-local function increment_partial_hourly_request_counters(unix_time_milliseconds)
-  for i = 1, 60 do
-    local timebucket_in_milliseconds = unix_time_milliseconds + 60000 * (i - 1)
-    local timebucket = get_time_bucket_from_timestamp(timebucket_in_milliseconds, true)
-    local key = wafris_prefix .. "hr-ct:" .. timebucket
-    redis.call("INCR", key)
-    -- Expire the key after 121 minutes if it has no expiry
-    redis.call("EXPIRE", key, 7260)
+  -- Checks if the key already exists in the property hash
+  -- the name ("ip") has a value (ex: "1.2.3.4") to the property id (ex: 1)
+  local property_id = redis.call("HGET", property_abbreviation .. "-v-id", property_value)
+
+  if property_id == false 
+  then
+    property_id = redis.call("INCR", property_abbreviation .. "-id-counter")
+    redis.call("HSET", property_abbreviation .. "-v-id", property_value, property_id)
+    redis.call("HSET", property_abbreviation .. "-id-v", property_id, property_value)
   end
+
+  return property_id
 end
 
--- Configuration
-local max_requests = 1000000
-local max_requests_per_ip = 100000
+-- Creates a hash for each unique property and adds request ids as entries
+local function set_property_to_requests(property_abbreviation, property_id, request_id, blocked)
+  redis.call("HSET", property_abbreviation .. property_id, request_id, "0")
+end
 
-local client_ip = ARGV[1]
-local client_ip_to_decimal = ARGV[2]
-local unix_time_milliseconds = ARGV[3]
-local unix_time = ARGV[3] / 1000
-local user_agent = ARGV[4]
-local request_path = ARGV[5]
-local host = ARGV[6]
-local method = ARGV[7]
+local function blocking_rules()
+  return false
+
+  -- Hash
+  -- Key: "1.1.1.1" -> "1.1.1.1"
+  --      "1.1.1.1/24" -> "1.1.1."
+  --      "1.1.1.1/16" -> "1.1."
+  --      "1.1.1.1/8" -> "1."
+
+
+end
+
+local function culling()
+  return false
+end     
 
 -- Initialize local variables
--- local request_id = get_request_id(nil, client_ip, max_requests)
 local current_timebucket = get_time_bucket_from_timestamp(unix_time_milliseconds, false)
 
--- CARD DATA COLLECTION
-increment_partial_hourly_request_counters(unix_time_milliseconds)
+-- Request Stream
+  -- Adding Request Properties to Hashes
+  local ip_id = set_property_value_id_lookups("i", client_ip)
+  local ua_id = set_property_value_id_lookups("u", user_agent)
+  local path_id = set_property_value_id_lookups("p", path)
+  local parameter_id = set_property_value_id_lookups("pa", parameters)
+  local host_id = set_property_value_id_lookups("h", host)
+  local method_id = set_property_value_id_lookups("m", method)
 
--- GRAPH DATA COLLECTION
--- add_to_graph_timebucket(current_timebucket, request_id)
+-- BLOCKING LOGIC
+-- TODO: Add blocking logic
+  local blocked 
 
--- LEADERBOARD DATA COLLECTION
-increment_timebucket_for("ip:", current_timebucket, client_ip)
-increment_timebucket_for("ua:", current_timebucket, user_agent)
-increment_timebucket_for("path:", current_timebucket, request_path)
-increment_timebucket_for("host:", current_timebucket, host)
-
-
--- NEW RELATIONAL STRUCTURE
-  -- using timestamp as id but should be * in production  
-  local stream_id = unix_time_milliseconds .. "-0"
-
--- IP Address Request Property
-local ip_id = redis.call("HGET", "ip-value-to-id", client_ip)
-
-if ip_id == false then
-  ip_id = redis.call("INCR", "ip-id-counter")
-  redis.call("HSET", "ip-value-to-id", client_ip, ip_id)
-  redis.call("HSET", "ip-id-to-value", ip_id, client_ip)
-end
-
--- User Agent Request Property
-local ua_id = redis.call("HGET", "ua-value-to-id", user_agent)
-
-if ua_id == false then
-  ua_id = redis.call("INCR", "ua-id-counter")
-  redis.call("HSET", "ua-value-to-id", user_agent, ua_id)
-  redis.call("HSET", "ua-id-to-value", ua_id, user_agent)
-end
-
--- Path Request Property
-local path_id = redis.call("HGET", "path-value-to-id", request_path)
-
-if path_id == false then
-  path_id = redis.call("INCR", "path-id-counter")
-  redis.call("HSET", "path-value-to-id", request_path, path_id)
-  redis.call("HSET", "path-id-to-value", path_id, request_path)
-end
-
--- Host Request Property
-local host_id = redis.call("HGET", "host-value-to-id", host)
-
-if host_id == false then
-  host_id = redis.call("INCR", "host-id-counter")
-  redis.call("HSET", "host-value-to-id", host, host_id)
-  redis.call("HSET", "host-id-to-value", host_id, host)
-end
-
--- Method Request Property
-local method_id = redis.call("HGET", "method-value-to-id", method)
-
-if method_id == false then
-  method_id = redis.call("INCR", "method-id-counter")
-  redis.call("HSET", "method-value-to-id", method, method_id)
-  redis.call("HSET", "method-id-to-value", method_id, method)
-end
+  if blocked_by_rules() == true then
+    blocked = 1
+    increment_leaderboard_for("b", current_timebucket, request_id)
+  else
+    blocked = 0    
+  end
 
 -- Adding Request Stream
-  local request_id = redis.call("XADD", "requestsStream", "MAXLEN", "~", max_requests, stream_id, "ip_id", ip_id, "ua_id", ua_id, "path_id", path_id, "host_id", host_id, "method_id", method_id)
- 
--- Adding to Property Hashes
+  local stream_id
 
-local function appendToHash(hashName, property_id, request_id)
-  redis.call("HSETNX", hashName, property_id, request_id)
-
-  local currentValues = redis.call("HGET", hashName, property_id)
-
-  if currentValues ~= request_id then
-      redis.call("HSET", hashName, property_id, currentValues .. "," .. request_id)
+  if use_timestamps_as_request_ids == true then
+      stream_id = unix_time_milliseconds
+  else
+      stream_id = "*"
   end
+  
+  local request_id = redis.call("XADD", "rStream", "MAXLEN", "~", max_requests, stream_id, "i", ip_id, "u", ua_id, "p", path_id, "h", host_id, "m", method_id, "up", parameters, "b", blocked)
+
+-- LEADERBOARD DATA COLLECTION
+-- using property abbreviation and timebucket
+  increment_leaderboard_for("i", current_timebucket, ip_id)
+  increment_leaderboard_for("u", current_timebucket, ua_id)
+  increment_leaderboard_for("p", current_timebucket, path_id)
+  increment_leaderboard_for("h", current_timebucket, host_id)
+  increment_leaderboard_for("m", current_timebucket, method_id)
+
+-- Property to Request Hashes
+  set_property_to_requests("i", ip_id, request_id, blocked)
+  set_property_to_requests("u", ua_id, request_id, blocked)
+  set_property_to_requests("p", path_id, request_id, blocked)
+  set_property_to_requests("h", host_id, request_id, blocked)
+  set_property_to_requests("m", method_id, request_id, blocked)
+
+-- Aggregate Hash Group Counts
+-- Used for Graphs and alerting
+
+if blocked == false then
+  return "Allowed"
+else
+  return "Blocked"
 end
-
-
-
--- Example usage:
-appendToHash("ip-to-request-hash", ip_id, request_id)
-appendToHash("ua-to-request-hash", ua_id, request_id)
-appendToHash("path-to-request-hash", path_id, request_id)
-appendToHash("host-to-request-hash", host_id, request_id)
-appendToHash("method-to-request-hash", method_id, request_id)
-
-return "ok"
-
-
-
-
-
-
-
-
 

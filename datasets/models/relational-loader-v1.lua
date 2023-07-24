@@ -1,8 +1,6 @@
 
 -- FUNCTIONS DECLARED FIRST
 
-
-
 -- Takes a timestamps and returns the timebucket
 -- parameter is a timestamp label in seconds
 -- a timebucket label is just another timestamp in seconds
@@ -42,43 +40,39 @@ local function increment_leaderboard_for(property_abbreviation, property_id, tim
   redis.call("EXPIRE", key, 86400)
 end
 
-local function encodeRequestId(full_request_id)
-  
-  -- Split the input at "-"
-  local parts = {}
-  for part in full_request_id:gmatch("[^-]+") do
-      table.insert(parts, part)
-  end
+local digits = "0123456789abcdefghijklmnopqrstuvwxyz"
 
-  local asciiCodes = {} -- Table to store the ASCII codes of the first part
-
-  -- Loop through the first part of the input two characters at a time
-  local firstPart = string.sub(parts[1], 2)
-  for i = 1, #firstPart, 2 do
-      local twoChars = string.sub(firstPart, i, i + 1)
-      local asciiCode = (tonumber(twoChars) - 1) + 128
-      table.insert(asciiCodes, asciiCode)
-  end
-
-  -- Convert ASCII codes to characters
-  local characters = {}
-  for _, code in ipairs(asciiCodes) do
-      table.insert(characters, string.char(code))
-  end
-
-  -- Append the last part of the input to the returned value
-  local result = table.concat(characters) .. parts[2]
-
-  return result
+local function to_base_n(n, base)
+    base = base or 10
+    if n < base then
+        return string.sub(digits, n+1, n+1)
+    else
+        local remainder = n % base
+        local quotient = math.floor(n / base)
+        return to_base_n(quotient, base) .. string.sub(digits, remainder+1, remainder+1)
+    end
 end
 
+local function encode_request_id(request_id)
+  -- Split the request ID into the timestamp and the identifier
+  local timestamp, identifier = string.match(request_id, "^(%d+)-(.+)$")
+  local encoded_value = to_base_n(tonumber(timestamp), 36)
+
+  if identifier == "0" then
+    return encoded_value
+  else 
+    return encoded_value .. "-" .. identifier
+  end
+
+end
 
 -- Creates a hash for each unique property and adds request ids as entries
 local function set_property_to_requests(property_abbreviation, property_id, request_id, timebucket)
   -- redis.call("LPUSH", property_abbreviation .. "R" .. property_id .. "-" .. timebucket, request_id)
     local existing_value = redis.call("HGET", property_abbreviation .. "R" .. "-" .. timebucket, property_id)
 
-    local encoded_id = encodeRequestId(request_id)
+    local encoded_id = encode_request_id(request_id)
+    --local encoded_id = request_id
 
     if existing_value == false then
       redis.call("HSET", property_abbreviation .. "R" .. "-" .. timebucket, property_id, encoded_id)
@@ -87,7 +81,7 @@ local function set_property_to_requests(property_abbreviation, property_id, requ
     end
     
   -- Expire the key after 25 hours if it has no expiry
-  redis.call("EXPIRE", property_abbreviation .. "R" .. property_id .. "-" .. timebucket, 86400)
+  redis.call("EXPIRE", property_abbreviation .. "R" .. "-" .. timebucket, 86400)
 end
 
 local function blocking_rules()

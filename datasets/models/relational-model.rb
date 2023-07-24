@@ -41,14 +41,14 @@ def process_csv_with_redis(csv_file, script_sha)
   CSV.foreach(csv_file) do |line|
     i += 1
 
-    if i % 1000 == 0
+    if i % 10000 == 0
       puts "Processed #{i} lines"
     end
 
-    ip, ip_int, timestamp_ms, user_agent, path, hostname, method = line.map(&:strip)
+    ip, timestamp_ms, user_agent, path, parameters, hostname, method = line.map(&:strip)
 
     # Enclose user_agent argument in quotes
-    command = ["EVALSHA", script_sha, "0", ip, ip_int, timestamp_ms, "'#{user_agent}'", path, hostname, method]
+    command = ["EVALSHA", script_sha, "0", ip, timestamp_ms, "'#{user_agent}'", path, parameters, hostname, method]
     redis.call(*command)
   end
 

@@ -16,12 +16,27 @@ puts "#{line_count} Requests from #{csv_file}"
 # Start Time
 start_time = (Time.now.to_f * 1000).to_i
 
+hmze = 'redis-cli config set hash-max-ziplist-entries 2048' 
+puts hmze
+system(hmze)
+
+hmzv = 'redis-cli config set hash-max-ziplist-value 256'
+puts hmzv
+system(hmzv)
+
+## 512/64 -> 312 bpr
+## 1024/128 -> 311 bpr
+## 2048/256 -> 309 bpr
+
+
+
 flush = `redis-cli flushall`
 puts "Redis flushed: #{flush}"
 
 # Load script
 script_sha = `redis-cli -x script load < models/relational-loader-v1.lua`.chomp
 puts "Script Loaded: #{script_sha}"
+
 
 # Start the redis-cli pipeline
 redis_cli_pipeline = []

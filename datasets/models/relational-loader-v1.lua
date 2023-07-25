@@ -4,9 +4,9 @@
 -- Takes a timestamps and returns the timebucket
 -- parameter is a timestamp label in seconds
 -- a timebucket label is just another timestamp in seconds
-local startOfHourTimestamp = 0
+
 local function get_timebucket(timestamp_in_seconds)  
-  startOfHourTimestamp = math.floor(timestamp_in_seconds / 3600) * 3600
+  local startOfHourTimestamp = math.floor(timestamp_in_seconds / 3600) * 3600
   return startOfHourTimestamp
 end
 
@@ -14,19 +14,18 @@ end
 local function set_property_value_id_lookups(property_abbreviation, property_value, expiration)
 
   -- Checks if the key already exists in the property hash
-  -- the name ("ip") has a value (ex: "1.2.3.4") to the property id (ex: 1)
-  local property_id
-  
-  property_id = redis.call("HGET", property_abbreviation .. "-v-id", property_value)
+  -- the name ("ip") has a value (ex: "1.2.3.4") to the property id (ex: 1)  
+  local value_key = property_abbreviation .. "V" .. property_value
+  local property_id = redis.call("GET", value_key)
 
   -- if the property id exists update the expiration
   if property_id == false then
     property_id = redis.call("INCR", property_abbreviation .. "-id-counter")
-    redis.call("HSET", property_abbreviation .. "-v-id", property_value, property_id)
-    redis.call("HSET", property_abbreviation .. "-id-v", property_id, property_value)
+    redis.call("SET", value_key, property_id)
+    redis.call("SET", property_abbreviation .. "I" .. property_id, property_value)
   else
-    redis.call("EXPIRE", property_abbreviation .. "-v-id", expiration)
-    redis.call("EXPIRE", property_abbreviation .. "-id-v", expiration)
+    redis.call("EXPIRE", value_key, expiration)
+    redis.call("EXPIRE", property_abbreviation .. "I" .. property_id, expiration)
   end
 
   return property_id
@@ -40,9 +39,9 @@ local function increment_leaderboard_for(property_abbreviation, property_id, tim
   redis.call("EXPIRE", key, 86400)
 end
 
-local digits = "0123456789abcdefghijklmnopqrstuvwxyz"
-
 local function to_base_n(n, base)
+    local digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ"
+
     base = base or 10
     if n < base then
         return string.sub(digits, n+1, n+1)
@@ -56,11 +55,11 @@ end
 local function encode_request_id(request_id)
   -- Split the request ID into the timestamp and the identifier
   local timestamp, identifier = string.match(request_id, "^(%d+)-(.+)$")
-  local encoded_value = to_base_n(tonumber(timestamp), 36)
+  local encoded_value = to_base_n(tonumber(timestamp), 62)
 
   if identifier == "0" then
     return encoded_value
-  else 
+  else
     return encoded_value .. "-" .. identifier
   end
 

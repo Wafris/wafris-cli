@@ -2,13 +2,13 @@ require 'faker'
 require 'awesome_print'
 
 # Settings
-ENTRY_COUNT = 100000
-IP_COUNT = 500
-PATH_COUNT = 100
+ENTRY_COUNT = 500000
+IP_COUNT = 50
+PATH_COUNT = 1000
 PARAMETERS_COUNT = 10000
 USER_AGENT_COUNT = 250
-METHOD_COUNT = 10
-HOST_COUNT = 500
+METHOD_COUNT = 25
+HOST_COUNT = 1500
 DAYS_AGO_COUNT = 1
 
 output_file = File.open('consumer-dataset.csv', 'w')

@@ -40,7 +40,7 @@ local function increment_leaderboard_for(property_abbreviation, property_id, tim
 end
 
 local function to_base_n(n, base)
-    local digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ"
+    local digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPRQSTUVWXYZ"
 
     base = base or 10
     if n < base then
@@ -99,7 +99,7 @@ end
 -- CONFIGURATION
 
 -- System Settings
-local max_requests_stream_size = 100000
+local max_requests_stream_size = 1000000
 local use_timestamps_as_request_ids = true
 local expiration_in_seconds = 86400
 
@@ -152,8 +152,9 @@ local current_timebucket = get_timebucket(request_ts_in_seconds, false)
   -- Request ID is the timestamp in milliseconds 
   local request_id = redis.call("XADD", "rStream", "MAXLEN", "~", max_requests_stream_size, stream_id, "i", ip_id, "u", ua_id, "p", path_id, "h", host_id, "m", method_id, "a", parameters_id, "b", blocked)
   
-  -- Add to Requests Count hash to precalc aggregate counts by hour
-  redis.call("HINCRBY", "rCounts", current_timebucket, 1)
+  -- Store incremented request count
+  redis.call("INCR", "rC-" .. current_timebucket)
+  redis.call("EXPIRE", "rC-" .. current_timebucket, expiration_in_seconds)
 
 
 -- LEADERBOARD DATA COLLECTION

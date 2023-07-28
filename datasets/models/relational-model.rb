@@ -53,6 +53,7 @@ def process_csv_with_redis(csv_file, script_sha)
 
   i = 0
 
+  start_time = (Time.now.to_f * 1000).to_i
   CSV.foreach(csv_file) do |line|
     i += 1
 
